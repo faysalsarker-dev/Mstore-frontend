@@ -7,6 +7,11 @@ const Sidebar = () => {
     { name: 'Get Cards', path: '/get-card' },
   ];
 
+  const adminsRoute = [
+    {name:"All users",path:"/users"},
+    {name:"Add Card",path:"/add-card"},
+  ]
+const user = true
   return (
     <div className="drawer lg:drawer-open">
       <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
@@ -16,6 +21,26 @@ const Sidebar = () => {
         <label htmlFor="my-drawer-2" aria-label="close sidebar" className="drawer-overlay"></label>
         
         <div className="menu bg-[#34495E] text-white min-h-screen w-60 p-4">
+        {
+            user && (
+              adminsRoute.map((item) =>(
+                <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `block rounded-lg p-3 my-2 transition-colors ${
+                    isActive ? 'bg-red-500' : 'hover:bg-slate-400'
+                  }`
+                }
+                aria-label={item.name}
+              >
+                <div className="border-b border-white">
+                  <p className="text-base">{item.name}</p>
+                </div>
+              </NavLink>
+              ))
+            )
+          }
           {list.map((item) => (
             <NavLink
               key={item.path}
@@ -32,6 +57,9 @@ const Sidebar = () => {
               </div>
             </NavLink>
           ))}
+
+
+       
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import BuyCard from "../pages/BuyCard";
 import MyCard from "../pages/MyCard";
 import Register from './../pages/login-register/Register';
 import Login from "../pages/login-register/Login";
+import Users from "../pages/admin/Users";
 
 
 const router = createBrowserRouter([
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
         path:'/my-cards',
         element:<MyCard/>
       },
+      {
+        path:'/users',
+        element:<Users/>
+      }
   
 
     ]

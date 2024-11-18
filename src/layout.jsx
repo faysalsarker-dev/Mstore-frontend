@@ -8,7 +8,7 @@ const Layout = () => {
       <Navbar />
       <div className="flex min-h-screen">
         {/* Sidebar section, fixed width */}
-        <div className="w-64  min-h-screen overflow-y-auto">
+        <div className="overflow-y-auto">
           <Sidebar />
         </div>
         
