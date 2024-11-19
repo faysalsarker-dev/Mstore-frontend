@@ -5,6 +5,8 @@ import MyCard from "../pages/MyCard";
 import Register from './../pages/login-register/Register';
 import Login from "../pages/login-register/Login";
 import Users from "../pages/admin/Users";
+import AddCard from "../pages/admin/AddCard";
+import CardManagement from "../pages/admin/CardManagement";
 
 
 const router = createBrowserRouter([
@@ -23,7 +25,15 @@ const router = createBrowserRouter([
       {
         path:'/users',
         element:<Users/>
-      }
+      },
+      {
+        path:'/add-card',
+        element:<AddCard/>
+      },
+      {
+        path:'/manage-card',
+        element:<CardManagement/>
+      },
   
 
     ]
