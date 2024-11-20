@@ -12,7 +12,7 @@ const CardManagement = () => {
   const [sort, setSort] = useState("Newest");
   const [filter, setFilter] = useState("All");
 
-  // Refetch data based on search, sort, and filter values
+  
 
 
   const { data, isLoading, isError } = useQuery({

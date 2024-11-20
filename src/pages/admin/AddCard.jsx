@@ -90,15 +90,26 @@ const AddCard = () => {
         </div>
 
         {/* Card Holder Name */}
-        <div>
-          <label htmlFor="holderName" className="block text-sm font-medium text-gray-700">Card Holder Name</label>
-          <input
-            type="text"
-            id="holderName"
-            {...register("holderName")}
-            className="input input-bordered w-full"
-          />
-        </div>
+ <div className="grid grid-cols-2 gap-2">
+          <div >
+            <label htmlFor="holderName" className="block text-sm font-medium text-gray-700">Card Holder Name</label>
+            <input
+              type="text"
+              id="holderName"
+              {...register("holderName")}
+              className="input input-bordered w-full"
+            />
+          </div>
+          <div>
+            <label htmlFor="Card Type" className="block text-sm font-medium text-gray-700">Card Type</label>
+            <input
+              type="text"
+              id="cardType"
+              {...register("cardType")}
+              className="input input-bordered w-full"
+            />
+          </div>
+ </div>
 
         {/* Address Information */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

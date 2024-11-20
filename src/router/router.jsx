@@ -7,6 +7,7 @@ import Login from "../pages/login-register/Login";
 import Users from "../pages/admin/Users";
 import AddCard from "../pages/admin/AddCard";
 import CardManagement from "../pages/admin/CardManagement";
+import SingleUser from "../pages/admin/SingleUser";
 
 
 const router = createBrowserRouter([
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
       {
         path:'/manage-card',
         element:<CardManagement/>
+      },
+      {
+        path:'/single-user/:id',
+        element:<SingleUser/>
       },
   
 

@@ -1,92 +1,166 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import useAxios from "../../hooks/useAxios";
+import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const Users = () => {
   const axiosCommon = useAxios();
 
-  // Use useQuery to fetch data
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['all-user'],
+  // Fetch user data
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["all-user"],
     queryFn: async () => {
-      const { data } = await axiosCommon.get('/users');
+      const { data } = await axiosCommon.get("/users");
       return data;
     },
   });
 
+  // Delete user mutation
+  const { mutateAsync: deleteUser } = useMutation({
+    mutationFn: async (id) => {
+      const response = await axiosCommon.delete(`/delete-user${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      Swal.fire({
+        title: "Deleted!",
+        text: "User deleted successfully.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+      refetch();
+    },
+    onError: () => {
+      Swal.fire("Error", "Failed to delete user.", "error");
+    },
+  });
+
+  // Update user status mutation
+  const { mutateAsync: updateStatus } = useMutation({
+    mutationFn: async (newValue) => {
+      const response = await axiosCommon.patch(`/update-user${newValue._id}`, newValue);
+      return response.data;
+    },
+    onSuccess: () => {
+      Swal.fire({
+        title: "Updated!",
+        text: "User status updated successfully.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+      });
+      refetch();
+    },
+    onError: () => {
+      Swal.fire("Error", "Failed to update status.", "error");
+    },
+  });
+
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteUser(id);
+      }
+    });
+  };
+
+  const handleStatusToggle = async (user) => {
+    const { status } = user;
+    const newStatus = status === "active" ? "deactive" : "active";
+    const newValue = { ...user, status: newStatus };
+
+    Swal.fire({
+      title: `Are you sure you want to ${status === "active" ? "deactivate" : "activate"} this user?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: status === "active" ? "#d33" : "#3085d6",
+      cancelButtonColor: "#aaa",
+      confirmButtonText: status === "active" ? "Yes, deactivate!" : "Yes, activate!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateStatus(newValue).catch(() => {
+          Swal.fire("Error", "Something went wrong while updating the status.", "error");
+        });
+      }
+    });
+  };
+
   // Handle loading and error states
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="text-center py-10 text-gray-500">Loading users...</div>;
   }
 
   if (isError) {
-    return <div>Error loading user data.</div>;
+    return <div className="text-center py-10 text-red-500">Failed to load user data. Please try again.</div>;
+  }
+
+  // Empty state
+  if (!data?.data?.length) {
+    return <div className="text-center py-10 text-gray-500">No users found.</div>;
   }
 
   return (
-    <div>
-      <div className="overflow-x-auto">
-        <table className="table">
-          {/* Table Head */}
-          <thead className="bg-base-200">
+    <div className="px-2 mx-auto ">
+      <h1 className="text-2xl font-bold text-center mb-6 text-primary">User Management</h1>
+      <div className="overflow-x-auto shadow-lg rounded-lg">
+        <table className="table table-zebra w-full">
+          <thead className="bg-gray-200">
             <tr>
-              <th>Name</th>
-              <th>status</th>
+              <th className="text-left">Name</th>
+              <th>Status</th>
               <th>Balance</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {
-              // Map over the user data
-              data.data.map((user) => (
-                <tr key={user.username} className="hover:bg-base-200">
-                  <td>
-                    <div className="flex items-center gap-3">
-           
-                      <div>
-                        <div className="font-bold">{user.username}</div>
-                        <div className="text-sm opacity-50">{new Date(user.createAt).toLocaleDateString()}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                  <div className={`badge ${user.status === 'active' ? 'badge-success' : 'badge-error'} gap-2  text-white`}>
-  {user.status === 'active' ? (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      className="size-4"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-  ) : (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      className="size-4"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-    </svg>
-  )}
-  {user.status}
-</div>
-
-                  </td>
-                  <td>
-                    <span className="badge badge-ghost badge-sm">{user.balance}</span>
-                  </td>
-                  <td>
-                    <button className="btn btn-ghost btn-xs">Details</button>
-                  </td>
-                </tr>
-              ))
-            }
+            {data.data.map((user) => (
+              <tr key={user._id} className="hover:bg-gray-100">
+                <td>
+                  <div className="font-semibold">{user.username}</div>
+                  <div className="text-sm text-gray-500">
+                    {new Date(user.createAt).toLocaleDateString()}
+                  </div>
+                </td>
+                <td>
+                  <span
+                    className={`badge ${
+                      user.status === "active" ? "badge-success" : "badge-error"
+                    }`}
+                  >
+                    {user.status === "active" ? "Active" : "Deactive"}
+                  </span>
+                </td>
+                <td>
+                  <span className="text-primary font-semibold">${user.balance}</span>
+                </td>
+                <td className="flex flex-wrap gap-2">
+                  <Link to={`/single-user/${user._id}`}>
+                    <button className="btn btn-sm btn-outline btn-primary">Details</button>
+                  </Link>
+                  <button
+                    onClick={() => handleStatusToggle(user)}
+                    className={`btn btn-sm ${
+                      user.status === "active" ? "btn-warning" : "btn-success"
+                    }`}
+                  >
+                    {user.status === "active" ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(user._id)}
+                    className="btn btn-sm btn-error"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

@@ -35,6 +35,7 @@ const Sidebar = () => {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
       </svg>
     )},
+
   ];
 
   const user = true;
