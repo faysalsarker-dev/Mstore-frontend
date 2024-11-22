@@ -3,11 +3,13 @@ import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import useAxios from '../../hooks/useAxios';
 import { useMutation } from "@tanstack/react-query";
+import {useNavigate} from 'react-router-dom'
 
 const Register = () => {
   const { register, handleSubmit, setValue, watch } = useForm();
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false); 
+  const navigate = useNavigate()
   const axiosCommon = useAxios();
 
   // Watch the values of the form fields
@@ -42,7 +44,7 @@ const Register = () => {
       // Set the unique username and password in the form
       setValue('username', uniqueUsername);
       setValue('password', randomPassword);
-      toast.success('Username and Password generated!');
+     
     } catch (error) {
       console.error('Error generating credentials:', error);
       toast.error('Failed to generate credentials.');
@@ -58,6 +60,7 @@ const Register = () => {
     },
     onSuccess: () => {
       toast.success('Register successful');
+      navigate(-1)
     },
     onError: (error) => {
       console.log(error);

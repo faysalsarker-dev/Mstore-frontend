@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import useAxios from "../../hooks/useAxios";
 import { Link } from "react-router-dom";
@@ -6,11 +7,26 @@ import Swal from "sweetalert2";
 const Users = () => {
   const axiosCommon = useAxios();
 
-  // Fetch user data
+  // State for pagination, search, and sorting
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [dateSort, setDateSort] = useState(""); // Options: '', 'asc', 'desc'
+  const [balanceSort, setBalanceSort] = useState(""); // Options: '', 'asc', 'desc'
+  const limit = 7; // Number of items per page
+
+  // Fetch user data with search and sort
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["all-user"],
+    queryKey: ["all-user", currentPage, searchQuery, dateSort, balanceSort],
     queryFn: async () => {
-      const { data } = await axiosCommon.get("/users");
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit,
+        search: searchQuery,
+        dateSort,
+        balanceSort,
+      });
+      const { data } = await axiosCommon.get(`/users?${params.toString()}`);
       return data;
     },
   });
@@ -35,26 +51,7 @@ const Users = () => {
     },
   });
 
-  // Update user status mutation
-  const { mutateAsync: updateStatus } = useMutation({
-    mutationFn: async (newValue) => {
-      const response = await axiosCommon.patch(`/update-user${newValue._id}`, newValue);
-      return response.data;
-    },
-    onSuccess: () => {
-      Swal.fire({
-        title: "Updated!",
-        text: "User status updated successfully.",
-        icon: "success",
-        confirmButtonColor: "#3085d6",
-      });
-      refetch();
-    },
-    onError: () => {
-      Swal.fire("Error", "Failed to update status.", "error");
-    },
-  });
-
+  // Handle delete confirmation
   const handleDelete = (id) => {
     Swal.fire({
       title: "Are you sure?",
@@ -71,31 +68,8 @@ const Users = () => {
     });
   };
 
-  const handleStatusToggle = async (user) => {
-    const { status } = user;
-    const newStatus = status === "active" ? "deactive" : "active";
-    const newValue = { ...user, status: newStatus };
-
-    Swal.fire({
-      title: `Are you sure you want to ${status === "active" ? "deactivate" : "activate"} this user?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: status === "active" ? "#d33" : "#3085d6",
-      cancelButtonColor: "#aaa",
-      confirmButtonText: status === "active" ? "Yes, deactivate!" : "Yes, activate!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        updateStatus(newValue).catch(() => {
-          Swal.fire("Error", "Something went wrong while updating the status.", "error");
-        });
-      }
-    });
-  };
-
   // Handle loading and error states
-  if (isLoading) {
-    return <div className="text-center py-10 text-gray-500">Loading users...</div>;
-  }
+ 
 
   if (isError) {
     return <div className="text-center py-10 text-red-500">Failed to load user data. Please try again.</div>;
@@ -106,10 +80,76 @@ const Users = () => {
     return <div className="text-center py-10 text-gray-500">No users found.</div>;
   }
 
+  const onSearch = ()=>{
+    setSearchQuery(search)
+  }
   return (
-    <div className="px-2 mx-auto ">
+    <div className="px-2 mx-auto">
       <h1 className="text-2xl font-bold text-center mb-6 text-primary">User Management</h1>
+
+      {/* Search and Sort Controls */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        {/* Search */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Search by name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="input input-bordered w-full max-w-xs"
+          />
+          <button
+            onClick={() => {
+              onSearch()
+              setCurrentPage(1); // Reset to page 1 when searching
+              refetch();
+            }}
+            className="btn btn-primary"
+          >
+            Search
+          </button>
+        </div>
+
+        {/* Sort by Date */}
+        <select
+          className="select select-bordered w-full max-w-xs"
+          value={dateSort}
+          onChange={(e) => {
+            setDateSort(e.target.value);
+            setBalanceSort(""); // Clear balance sort when date sort is applied
+          }}
+        >
+          <option value="">Sort by Date</option>
+          <option value="asc">Oldest First</option>
+          <option value="desc">Newest First</option>
+        </select>
+
+        {/* Sort by Balance */}
+        <select
+          className="select select-bordered w-full max-w-xs"
+          value={balanceSort}
+          onChange={(e) => {
+            setBalanceSort(e.target.value);
+            setDateSort(""); // Clear date sort when balance sort is applied
+          }}
+        >
+          <option value="">Sort by Balance</option>
+          <option value="asc">Low to High</option>
+          <option value="desc">High to Low</option>
+        </select>
+      </div>
+
+
+
+      {/* User Table */}
       <div className="overflow-x-auto shadow-lg rounded-lg">
+        <div>
+          {
+            isLoading && (
+<div className="text-center py-10 text-gray-500">Loading users...</div>
+            )
+          }
+        </div>
         <table className="table table-zebra w-full">
           <thead className="bg-gray-200">
             <tr>
@@ -130,7 +170,7 @@ const Users = () => {
                 </td>
                 <td>
                   <span
-                    className={`badge ${
+                    className={`badge text-white ${
                       user.status === "active" ? "badge-success" : "badge-error"
                     }`}
                   >
@@ -145,16 +185,8 @@ const Users = () => {
                     <button className="btn btn-sm btn-outline btn-primary">Details</button>
                   </Link>
                   <button
-                    onClick={() => handleStatusToggle(user)}
-                    className={`btn btn-sm ${
-                      user.status === "active" ? "btn-warning" : "btn-success"
-                    }`}
-                  >
-                    {user.status === "active" ? "Deactivate" : "Activate"}
-                  </button>
-                  <button
                     onClick={() => handleDelete(user._id)}
-                    className="btn btn-sm btn-error"
+                    className="btn btn-sm btn-neutral"
                   >
                     Delete
                   </button>
@@ -163,6 +195,35 @@ const Users = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-4 gap-2">
+        <div className="btn-group ">
+          <button
+            className="btn"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+          >
+            «
+          </button>
+          {[...Array(data.totalPages).keys()].map((num) => (
+            <button
+              key={num}
+              className={`btn mx-1 ${currentPage === num + 1 ? "btn-active" : ""}`}
+              onClick={() => setCurrentPage(num + 1)}
+            >
+              {num + 1}
+            </button>
+          ))}
+          <button
+            className="btn"
+            disabled={currentPage === data.totalPages}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+          >
+            »
+          </button>
+        </div>
       </div>
     </div>
   );
