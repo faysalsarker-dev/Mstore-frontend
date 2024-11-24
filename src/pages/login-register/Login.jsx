@@ -1,21 +1,40 @@
-import  { useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+
+import useAuth from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 
 const Login = () => {
-  const { register, handleSubmit,  } = useForm();
+  const { register, handleSubmit, reset } = useForm();
   const [showPassword, setShowPassword] = useState(false);
+  const {signIn,user}=useAuth()
 
-
-
-  const onSubmit = (data) => {
-    console.log('Form Data:', data);
-    toast.apply(data.username,data.password)
-  
+  const navigate = useNavigate();
+  const location = useLocation()
+  const onSubmit = async (data) => {
+      try {
+         
+          signIn(data.username,data.password)
+          .then(() => {
+              toast.success("Login successful");
+              navigate('/');
+              reset(); 
+              console.log('login');
+              
+          });
+      } catch (error) {
+          console.error('Error during registration:', error);
+          toast.error("Registration failed. Please try again later.");
+      }
   };
 
-
+  useEffect(() => {
+    if (user) {
+        navigate(location.state ? location.state : '/');
+    }
+}, [navigate,user ,location.state]);
 
 
   return (

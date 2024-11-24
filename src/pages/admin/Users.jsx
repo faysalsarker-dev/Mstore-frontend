@@ -3,10 +3,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import useAxios from "../../hooks/useAxios";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
+import useAuth from "../../hooks/useAuth";
 
 const Users = () => {
   const axiosCommon = useAxios();
-
+const {deleteUser}=useAuth()
   // State for pagination, search, and sorting
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,12 +33,13 @@ const Users = () => {
   });
 
   // Delete user mutation
-  const { mutateAsync: deleteUser } = useMutation({
+  const { mutateAsync: deleteUserDb } = useMutation({
     mutationFn: async (id) => {
       const response = await axiosCommon.delete(`/delete-user${id}`);
       return response.data;
     },
     onSuccess: () => {
+      
       Swal.fire({
         title: "Deleted!",
         text: "User deleted successfully.",
@@ -52,7 +54,10 @@ const Users = () => {
   });
 
   // Handle delete confirmation
-  const handleDelete = (id) => {
+  const handleDelete = (user) => {
+    const {_id,uid}= user;
+    console.log(user);
+  
     Swal.fire({
       title: "Are you sure?",
       text: "This action cannot be undone!",
@@ -61,9 +66,10 @@ const Users = () => {
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
+    }).then(async(result) => {
       if (result.isConfirmed) {
-        deleteUser(id);
+       await deleteUserDb(_id);
+        await deleteUser(uid)
       }
     });
   };
@@ -185,7 +191,7 @@ const Users = () => {
                     <button className="btn btn-sm btn-outline btn-primary">Details</button>
                   </Link>
                   <button
-                    onClick={() => handleDelete(user._id)}
+                    onClick={() => handleDelete(user)}
                     className="btn btn-sm btn-neutral"
                   >
                     Delete
