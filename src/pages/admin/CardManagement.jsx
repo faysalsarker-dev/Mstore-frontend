@@ -1,161 +1,140 @@
 import { useState } from "react";
-
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "../../hooks/useAxios";
 
-const CardManagement = () => {
+
+const BuyCard = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [dateSort, setDateSort] = useState("asc");
+  const [filterType, setFilterType] = useState("All");
+  const limit = 10;
   const axiosCommon = useAxios();
 
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("Newest");
-  const [filter, setFilter] = useState("All");
-
-  
-
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey:  ["all-cards", page, search, sort, filter],
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["all-cards", currentPage, search, dateSort, filterType],
     queryFn: async () => {
-      const { data } = await axiosCommon.get(
-        `/all-cards?page=${page}&limit=10&sortField=${sort}&search=${search}&filter=${filter}`
-      );
-      setTotalPages(data.totalPages)
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit,
+        search: search,
+        sortField: "expiryDate",
+        sortOrder: dateSort,
+        filter: filterType,
+      });
+      const { data } = await axiosCommon.get(`/all-cards?${params.toString()}`);
       return data;
     },
-    keepPreviousData: true
   });
 
-  const handlePageChange = (newPage) => {
-    setPage(newPage);
-  };
-
-  // Handle search input change and trigger refetch
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-  };
-
-  // Handle sort and filter changes and trigger refetch
   const handleSortChange = (e) => {
-    setSort(e.target.value);
+    setDateSort(e.target.value);
+    refetch();
+  };
+
+  const handleSearch = (e) => {
+    setSearch(searchQuery)
+    e.preventDefault();
+    refetch();
   };
 
   const handleFilterChange = (e) => {
-    setFilter(e.target.value);
+    setFilterType(e.target.value);
+    refetch();
   };
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
-  if (isError) {
-    return <div>Error loading user data.</div>;
-  }
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Something went wrong!</div>;
 
   return (
-    <div className="p-6 bg-gray-100">
-      {/* Top Bar */}
-      <div className="flex justify-between items-center mb-6">
-        {/* Search Bar */}
-        <div className="relative w-1/3">
+    <div className="p-4">
+      {/* Top Bar with Search, Sort and Filters */}
+      <div className="flex justify-between items-center mb-4">
+        <form className="flex gap-2" onSubmit={handleSearch}>
           <input
             type="text"
-            placeholder="Search by card number"
-            className="w-full p-3 pl-10 rounded-lg border border-gray-300"
-            value={search}
-            onChange={handleSearchChange} // Use the function here
+            placeholder="Search by country"
+            className="input input-bordered w-64"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <svg
-            className="absolute left-3 top-3 w-5 h-5 text-gray-500"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+          <button className="btn btn-primary" type="submit">
+            Search
+          </button>
+        </form>
+        <div className="flex gap-2 items-center">
+          <select
+            className="select select-bordered"
+            value={filterType}
+            onChange={handleFilterChange}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M11 16a7 7 0 111.001-14.001A7 7 0 0111 16zM22 22l-4-4"
-            />
-          </svg>
+            <option value="All">All Types</option>
+            <option value="Visa">Visa</option>
+            <option value="MasterCard">MasterCard</option>
+            <option value="American Express">American Express</option>
+          </select>
+          <select className="select select-bordered w-full max-w-xs"
+            value={dateSort}
+            onChange={handleSortChange}
+          >
+  <option disabled selected>All</option>
+  <option  value='asc' >Sort Asc</option>
+  <option  value='desc'>Sort Desc</option>
+</select>
+   
         </div>
-
-        {/* Dropdown to Sort by Expiration Date */}
-        <select
-          value={sort}
-          onChange={handleSortChange} // Use the function here
-          className="p-3 rounded-lg border border-gray-300"
-        >
-          <option value="Newest">Newest First</option>
-          <option value="Oldest">Oldest First</option>
-        </select>
-
-        {/* Filter by Card Type */}
-        <select
-          value={filter}
-          onChange={handleFilterChange} // Use the function here
-          className="p-3 rounded-lg border border-gray-300"
-        >
-          <option value="All">All Cards</option>
-          <option value="Visa">Visa</option>
-          <option value="MasterCard">MasterCard</option>
-        </select>
-
-        {/* Button to Add New Card */}
-        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-          Add New Card
-        </button>
       </div>
 
-      {/* Table to Display Cards */}
-      <div className="overflow-x-auto bg-white rounded-lg shadow-md">
-        <table className="min-w-full table-auto">
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="table w-full table-striped ">
           <thead className="bg-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Card Number</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Holder Name</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Expire Date</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">CVV</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Type</th>
+              <th>Card Type</th>
+              <th>Card Number</th>
+              <th>Holder Name</th>
+              <th>Country</th>
+              <th>Expiry Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {data.data.length > 0 ? (
-              data.data.map((card, index) => (
-                <tr key={index} className="hover:bg-gray-100">
-                  <td className="px-6 py-4 text-sm text-gray-900">{card.number}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{card.holder}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{card.expireDate}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{card.cvv}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{card.type}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="px-6 py-4 text-sm text-center text-gray-500">
-                  No cards found.
+            {data?.data.map((card) => (
+              <tr key={card._id} className="bg-white hover:bg-gray-100">
+                <td>{card.cardType}</td>
+                <td>{card.cardNumber}</td>
+                <td>{card.holderName}</td>
+                <td>{card.country}</td>
+                <td>{card.date}</td>
+                <td>
+                  <button className="btn btn-primary btn-sm">Buy Now</button>
                 </td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
+      </div>
 
-        {/* Pagination Controls */}
-        <div className="flex justify-center mt-4">
-          {[...Array(totalPages)].map((_, index) => (
-            <button
-              key={index}
-              onClick={() => handlePageChange(index + 1)}
-              className={`join-item btn ${page === index + 1 ? "btn-active" : ""}`}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
+      {/* Pagination */}
+      <div className="flex justify-center mt-4">
+        <button
+          className="btn btn-sm mx-1"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((prev) => prev - 1)}
+        >
+          Previous
+        </button>
+        <button
+          className="btn btn-sm mx-1"
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+          disabled={currentPage === data.totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
 };
 
-export default CardManagement;
+export default BuyCard;

@@ -171,7 +171,7 @@ const {deleteUser}=useAuth()
                 <td>
                   <div className="font-semibold">{user.username}</div>
                   <div className="text-sm text-gray-500">
-                    {new Date(user.createAt).toLocaleDateString()}
+                    {new Date(user.createdAt).toLocaleDateString()}
                   </div>
                 </td>
                 <td>
