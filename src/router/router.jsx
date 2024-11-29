@@ -6,8 +6,12 @@ import Register from './../pages/login-register/Register';
 import Login from "../pages/login-register/Login";
 import Users from "../pages/admin/Users";
 import AddCard from "../pages/admin/AddCard";
-import CardManagement from "../pages/admin/CardManagement";
 import SingleUser from "../pages/admin/SingleUser";
+import Dashboard from "../pages/admin/Deshboard";
+import GetCard from "../pages/GetCard";
+import UserRequest from "../pages/admin/UserRequest";
+import ManageCard from "../pages/admin/CardManagement";
+import Protector from "./Protector/Protector";
 
 
 const router = createBrowserRouter([
@@ -25,19 +29,31 @@ const router = createBrowserRouter([
       },
       {
         path:'/users',
-        element:<Users/>
+        element:<Protector><Users/></Protector>
       },
       {
         path:'/add-card',
-        element:<AddCard/>
+        element:<Protector><AddCard/></Protector>
       },
       {
         path:'/manage-card',
-        element:<CardManagement/>
+        element:<Protector><ManageCard/></Protector>
       },
       {
         path:'/single-user/:id',
-        element:<SingleUser/>
+        element:<Protector><SingleUser/></Protector>
+      },
+      {
+        path:'/dashboard',
+        element:<Protector><Dashboard/></Protector>
+      },
+      {
+        path:'/get-credit',
+        element:<GetCard/>
+      },
+      {
+        path:'/user-request',
+        element:<Protector><UserRequest/></Protector>
       },
   
 

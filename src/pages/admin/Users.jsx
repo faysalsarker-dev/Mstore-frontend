@@ -12,20 +12,18 @@ const {deleteUser}=useAuth()
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [search, setSearch] = useState("");
-  const [dateSort, setDateSort] = useState(""); // Options: '', 'asc', 'desc'
-  const [balanceSort, setBalanceSort] = useState(""); // Options: '', 'asc', 'desc'
+
   const limit = 7; // Number of items per page
 
   // Fetch user data with search and sort
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["all-user", currentPage, searchQuery, dateSort, balanceSort],
+    queryKey: ["all-user", currentPage, searchQuery,],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: currentPage,
         limit,
         search: searchQuery,
-        dateSort,
-        balanceSort,
+      
       });
       const { data } = await axiosCommon.get(`/users?${params.toString()}`);
       return data;
@@ -117,32 +115,10 @@ const {deleteUser}=useAuth()
         </div>
 
         {/* Sort by Date */}
-        <select
-          className="select select-bordered w-full max-w-xs"
-          value={dateSort}
-          onChange={(e) => {
-            setDateSort(e.target.value);
-            setBalanceSort(""); // Clear balance sort when date sort is applied
-          }}
-        >
-          <option value="">Sort by Date</option>
-          <option value="asc">Oldest First</option>
-          <option value="desc">Newest First</option>
-        </select>
+ 
 
         {/* Sort by Balance */}
-        <select
-          className="select select-bordered w-full max-w-xs"
-          value={balanceSort}
-          onChange={(e) => {
-            setBalanceSort(e.target.value);
-            setDateSort(""); // Clear date sort when balance sort is applied
-          }}
-        >
-          <option value="">Sort by Balance</option>
-          <option value="asc">Low to High</option>
-          <option value="desc">High to Low</option>
-        </select>
+      
       </div>
 
 

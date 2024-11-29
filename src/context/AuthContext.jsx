@@ -7,21 +7,22 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
+  updateProfile,
 } from "firebase/auth";
 import toast from "react-hot-toast";
 import app from "../firebase/firebase.config";
 import useAxios from "../hooks/useAxios";
 
 const auth = getAuth(app);
-
 export const ContextData = createContext(null);
 
 const AuthContext = ({ children }) => {
   const axiosCommon = useAxios();
   const [user, setUser] = useState(null);
+  const [whoMe, setWhoMe] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
+  // Save user data to backend
   const saveUserToBackend = async (userData) => {
     try {
       const { data } = await axiosCommon.post("/register", userData);
@@ -33,16 +34,17 @@ const AuthContext = ({ children }) => {
     }
   };
 
-
+  // Create a new user
   const createUser = async (email, password) => {
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, `${email}@gmail.com`, password);
       const { user: firebaseUser } = userCredential;
 
       const userPayload = {
         uid: firebaseUser.uid,
         username: email,
+        email: `${email}@gmail.com`,
         createdAt: new Date().toISOString(),
         status: "inactive",
         balance: 0,
@@ -51,8 +53,8 @@ const AuthContext = ({ children }) => {
 
       // Save user data to the backend
       await saveUserToBackend(userPayload);
-
-      toast.success("User registered successfully!");
+      profileUpdate(email)
+      
       return userCredential;
     } catch (error) {
       console.error("Error creating user:", error?.response?.data?.message || error.message);
@@ -63,12 +65,21 @@ const AuthContext = ({ children }) => {
     }
   };
 
+  const profileUpdate = async (name) => {
+    setLoading(true);
+    await updateProfile(auth.currentUser, {
+      displayName: name,
+    
+    });
+    window.location.reload()
+  };
 
+  // User sign-in
   const signIn = async (email, password) => {
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      toast.success("Login successful!");
+      const userCredential = await signInWithEmailAndPassword(auth, `${email}@gmail.com`, password);
+      
       return userCredential;
     } catch (error) {
       console.error("Error signing in:", error?.response?.data?.message || error.message);
@@ -79,12 +90,11 @@ const AuthContext = ({ children }) => {
     }
   };
 
- 
+  // User logout
   const logOut = async () => {
     setLoading(true);
     try {
       await signOut(auth);
-      await axiosCommon.post("/logout"); // Notify backend about the logout
       toast.success("Logged out successfully.");
       setUser(null);
     } catch (error) {
@@ -96,37 +106,38 @@ const AuthContext = ({ children }) => {
     }
   };
 
+  // Delete a user
   const deleteUser = async (uid) => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      // Make a request to the backend to delete the user
       const response = await axiosCommon.delete(`/delete-user/${uid}`);
-      console.log('User deleted successfully:', response.data);
-
+      console.log("User deleted successfully:", response.data);
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error("Error deleting user:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Fetch user info
+  const myInfo = async (userEmail) => {
+    try {
+      const { data } = await axiosCommon.get(`/me/${userEmail}`);
+      setWhoMe(data);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  };
+
+  // Track authentication state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setLoading(true);
       if (currentUser) {
         setUser(currentUser);
-        // try {
-        //   const { email } = currentUser;
-        //   const { data } = await axiosCommon.post("/jwt", { email }); // Obtain JWT token
-        //   localStorage.setItem("token", data.token); // Save token securely
-        //   toast.success("Session restored successfully.");
-        // } catch (error) {
-        //   console.error("Error during token retrieval:", error?.response?.data?.message || error.message);
-        //   toast.error("Failed to restore session.");
-        // }
+        await myInfo(currentUser.email);
       } else {
         setUser(null);
-        localStorage.removeItem("token"); // Remove token on logout
       }
       setLoading(false);
     });
@@ -141,7 +152,9 @@ const AuthContext = ({ children }) => {
     logOut,
     user,
     loading,
-    deleteUser
+    deleteUser,
+    whoMe,
+    myInfo,
   };
 
   return <ContextData.Provider value={contextData}>{children}</ContextData.Provider>;

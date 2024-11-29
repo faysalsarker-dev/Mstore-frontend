@@ -1,34 +1,38 @@
-
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import Swal from 'sweetalert2';
 import useAxios from '../../hooks/useAxios';
-import { useParams } from 'react-router-dom';
-
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 
 const SingleUser = () => {
   const { id } = useParams();
   const axiosCommon = useAxios();
-
+  const navigate = useNavigate()
 
   // Fetch single user
-  const { data: user, isLoading, isError,refetch } = useQuery({
+  const { data: user, isLoading, isError, refetch } = useQuery({
     queryKey: ['single-user', id],
     queryFn: async () => {
       const { data } = await axiosCommon.get(`/single-user/${id}`);
-    
       return data;
     },
   });
 
   // Form handling
-  const { register, handleSubmit } = useForm({
-    defaultValues: {
-      status: user?.status || 'active',
-      balance: user?.balance || 0,
-    },
-  });
+  const { register, handleSubmit, reset } = useForm();
 
+  // Populate default values once user data is fetched
+ useEffect(() => {
+    if (user) {
+      reset({
+        status: user?.status || 'inactive',
+        balance: user?.balance || 0,
+      });
+    }
+  }, [user, reset]);
+
+  // Update user mutation
   const { mutateAsync } = useMutation({
     mutationFn: async (updatedData) => {
       const response = await axiosCommon.patch(`/update-user${user._id}`, updatedData);
@@ -41,6 +45,7 @@ const SingleUser = () => {
         icon: 'success',
       });
       refetch()
+      navigate(-1)
     },
     onError: () => {
       Swal.fire('Error', 'Something went wrong!', 'error');
@@ -65,7 +70,7 @@ const SingleUser = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center ">
+      <div className="flex justify-center items-center h-screen">
         <p className="text-gray-500">Loading...</p>
       </div>
     );
@@ -100,7 +105,7 @@ const SingleUser = () => {
             <label className="block text-sm font-medium text-gray-700">Created At</label>
             <input
               type="text"
-              value={new Date(user.createAt).toLocaleDateString()}
+              value={new Date(user.createdAt).toLocaleDateString()}
               disabled
               className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
             />
@@ -110,16 +115,11 @@ const SingleUser = () => {
           <div className="col-span-1">
             <label className="block text-sm font-medium text-gray-700">Status</label>
             <select
-             defaultValue={user?.status | 'deactive'}
               {...register('status')}
               className="select select-bordered w-full"
             >
-              <option  value="active" >
-                Active
-              </option>
-              <option value="deactive">
-                Deactive
-              </option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
             </select>
           </div>
 
@@ -130,7 +130,6 @@ const SingleUser = () => {
               type="number"
               {...register('balance', { valueAsNumber: true })}
               className="input input-bordered w-full"
-              defaultValue={user.balance}
             />
           </div>
 

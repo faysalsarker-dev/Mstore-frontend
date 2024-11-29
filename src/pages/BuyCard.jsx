@@ -1,25 +1,29 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import useAxios from "../hooks/useAxios";
+import toast from "react-hot-toast";
+import useAuth from "../hooks/useAuth";
+import Swal from "sweetalert2";
+import { useNavigate } from 'react-router-dom';
 
 const BuyCard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [search, setSearch] = useState("");
-  const [dateSort, setDateSort] = useState("asc");
   const [filterType, setFilterType] = useState("All");
+
   const limit = 10;
   const axiosCommon = useAxios();
-
+  const { user, whoMe,myInfo } = useAuth();
+const navigate = useNavigate()
+  // Query for fetching cards
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["all-cards", currentPage, search, dateSort, filterType],
+    queryKey: ["all-cards", currentPage, search, filterType],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: currentPage,
         limit,
-        search: search,
-        sortField: "expiryDate",
-        sortOrder: dateSort,
+        search,
         filter: filterType,
       });
       const { data } = await axiosCommon.get(`/all-cards?${params.toString()}`);
@@ -27,17 +31,104 @@ const BuyCard = () => {
     },
   });
 
-  const handleSortChange = (e) => {
-    setDateSort(e.target.value);
-    refetch();
+  // Mutation for buying a card
+  const { mutateAsync: BuyCard } = useMutation({
+    mutationFn: async (info) => {
+      const { data } = await axiosCommon.patch(`/update-card/${info._id}`, info);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Card added successfully");
+      myInfo(user?.email)
+    
+    },
+    onError: () => {
+      toast.error("Something went wrong.");
+    },
+  });
+
+  const onBuy = (info) => {
+    if (!user) {
+      Swal.fire({
+        title: "Login Required",
+        text: "You need to log in to make a purchase.",
+        icon: "warning",
+        confirmButtonText: "Login",
+        cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+       
+        navigate('/login')
+      }
+    });
+    return;
+  }
+
+    if (!whoMe || whoMe.balance === undefined) {
+      Swal.fire({
+        title: "Account Issue",
+        text: "Unable to fetch your account details. Please try again.",
+        icon: "error",
+        confirmButtonText: "Retry",
+      });
+      return;
+    }
+
+    if (whoMe.balance < info.price) {
+      Swal.fire({
+        title: "Insufficient Balance",
+        text: "You don't have enough credits. Please add more to proceed.",
+        icon: "warning",
+        confirmButtonText: "Get credits",
+        cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+       
+        navigate('/get-credit')
+      }
+    });
+    return;
+  
+    }
+
+    const data = {
+      ...info,
+      buyer: user.email,
+    };
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to buy this card?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Buy it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        BuyCard(data);
+      }
+    });
   };
 
+  // Handle search submission
   const handleSearch = (e) => {
-    setSearch(searchQuery)
     e.preventDefault();
+    setSearch(searchQuery);
     refetch();
   };
 
+  // Card type options
+  const cardTypes = [
+    { name: "All", value: "All" },
+    { name: "Visa", value: "Visa" },
+    { name: "MasterCard", value: "MasterCard" },
+    { name: "Amex", value: "Amex" },
+    { name: "Discover", value: "Discover" },
+    { name: "American Express", value: "American Express" },
+  ];
+
+  // Handle filter change
   const handleFilterChange = (e) => {
     setFilterType(e.target.value);
     refetch();
@@ -48,7 +139,7 @@ const BuyCard = () => {
 
   return (
     <div className="p-4">
-      {/* Top Bar with Search, Sort and Filters */}
+      {/* Top Bar with Search and Filters */}
       <div className="flex justify-between items-center mb-4">
         <form className="flex gap-2" onSubmit={handleSearch}>
           <input
@@ -68,26 +159,18 @@ const BuyCard = () => {
             value={filterType}
             onChange={handleFilterChange}
           >
-            <option value="All">All Types</option>
-            <option value="Visa">Visa</option>
-            <option value="MasterCard">MasterCard</option>
-            <option value="American Express">American Express</option>
+            {cardTypes.map((type) => (
+              <option key={type.name} value={type.value}>
+                {type.name}
+              </option>
+            ))}
           </select>
-          <select className="select select-bordered w-full max-w-xs"
-            value={dateSort}
-            onChange={handleSortChange}
-          >
-  <option disabled selected>All</option>
-  <option  value='asc' >Sort Asc</option>
-  <option  value='desc'>Sort Desc</option>
-</select>
-   
         </div>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="table w-full table-striped ">
+        <table className="table w-full table-striped">
           <thead className="bg-gray-200">
             <tr>
               <th>Card Type</th>
@@ -95,6 +178,7 @@ const BuyCard = () => {
               <th>Holder Name</th>
               <th>Country</th>
               <th>Expiry Date</th>
+              <th>Price</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -106,8 +190,14 @@ const BuyCard = () => {
                 <td>{card.holderName}</td>
                 <td>{card.country}</td>
                 <td>{card.date}</td>
+                <td>{card.price}</td>
                 <td>
-                  <button className="btn btn-primary btn-sm">Buy Now</button>
+                  <button
+                    onClick={() => onBuy(card)}
+                    className="btn btn-primary btn-sm"
+                  >
+                    Buy Now
+                  </button>
                 </td>
               </tr>
             ))}
@@ -126,8 +216,8 @@ const BuyCard = () => {
         </button>
         <button
           className="btn btn-sm mx-1"
+          disabled={currentPage === data?.totalPages}
           onClick={() => setCurrentPage((prev) => prev + 1)}
-          disabled={currentPage === data.totalPages}
         >
           Next
         </button>

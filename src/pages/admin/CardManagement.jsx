@@ -1,26 +1,25 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import useAxios from "../../hooks/useAxios";
+import toast from "react-hot-toast";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
-
-const BuyCard = () => {
+const ManageCard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [search, setSearch] = useState("");
-  const [dateSort, setDateSort] = useState("asc");
+
   const [filterType, setFilterType] = useState("All");
   const limit = 10;
   const axiosCommon = useAxios();
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["all-cards", currentPage, search, dateSort, filterType],
+    queryKey: ["all-cards", currentPage, search, filterType],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: currentPage,
         limit,
         search: search,
-        sortField: "expiryDate",
-        sortOrder: dateSort,
         filter: filterType,
       });
       const { data } = await axiosCommon.get(`/all-cards?${params.toString()}`);
@@ -28,13 +27,8 @@ const BuyCard = () => {
     },
   });
 
-  const handleSortChange = (e) => {
-    setDateSort(e.target.value);
-    refetch();
-  };
-
   const handleSearch = (e) => {
-    setSearch(searchQuery)
+    setSearch(searchQuery);
     e.preventDefault();
     refetch();
   };
@@ -44,12 +38,51 @@ const BuyCard = () => {
     refetch();
   };
 
+  const { mutateAsync: deleteCard } = useMutation({
+    mutationFn: async (info) => {
+      const { data } = await axiosCommon.delete(`/delete-cards/${info._id}`);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Card deleted successfully");
+      refetch();
+    },
+    onError: () => {
+      toast.error("Something went wrong.");
+    },
+  });
+
+  // Show SweetAlert2 confirmation before delete
+  const onDelete = (id) => {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "This action will delete the card permanently!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteCard({ _id: id }); 
+      }
+    });
+  };
+
+  const cardTypes = [
+    { name: "All", value: "All" },
+    { name: "Visa", value: "Visa" },
+    { name: "MasterCard", value: "MasterCard" },
+    { name: "Amex", value: "Amex" },
+    { name: "Discover", value: "Discover" },
+    { name: "American Express", value: "American Express" },
+  ];
+
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Something went wrong!</div>;
 
   return (
     <div className="p-4">
-      {/* Top Bar with Search, Sort and Filters */}
       <div className="flex justify-between items-center mb-4">
         <form className="flex gap-2" onSubmit={handleSearch}>
           <input
@@ -63,26 +96,19 @@ const BuyCard = () => {
             Search
           </button>
         </form>
+
         <div className="flex gap-2 items-center">
           <select
             className="select select-bordered"
             value={filterType}
             onChange={handleFilterChange}
           >
-            <option value="All">All Types</option>
-            <option value="Visa">Visa</option>
-            <option value="MasterCard">MasterCard</option>
-            <option value="American Express">American Express</option>
+            {cardTypes.map((type) => (
+              <option key={type.name} value={type.value}>
+                {type.name}
+              </option>
+            ))}
           </select>
-          <select className="select select-bordered w-full max-w-xs"
-            value={dateSort}
-            onChange={handleSortChange}
-          >
-  <option disabled selected>All</option>
-  <option  value='asc' >Sort Asc</option>
-  <option  value='desc'>Sort Desc</option>
-</select>
-   
         </div>
       </div>
 
@@ -95,6 +121,7 @@ const BuyCard = () => {
               <th>Card Number</th>
               <th>Holder Name</th>
               <th>Country</th>
+              <th>inStock</th>
               <th>Expiry Date</th>
               <th>Actions</th>
             </tr>
@@ -106,9 +133,15 @@ const BuyCard = () => {
                 <td>{card.cardNumber}</td>
                 <td>{card.holderName}</td>
                 <td>{card.country}</td>
+                <td>{card.inStock === true ? 'true':'false'}</td>
                 <td>{card.date}</td>
                 <td>
-                  <button className="btn btn-primary btn-sm">Buy Now</button>
+                  <button
+                    onClick={() => onDelete(card._id)}
+                    className="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
@@ -137,4 +170,4 @@ const BuyCard = () => {
   );
 };
 
-export default BuyCard;
+export default ManageCard;

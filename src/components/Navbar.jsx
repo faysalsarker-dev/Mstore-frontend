@@ -1,8 +1,36 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
+
+import useAuth from "../hooks/useAuth";
+import Swal from "sweetalert2";
 
 const Navber = () => {
+const {user,whoMe,logOut}= useAuth()
+console.log('whome',whoMe);
+
+const OnLogout =()=>{
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!"
+  }).then(() => {
+
+    logOut()
+    window.location.reload()
+  });
+}
   const adminsRoute = [
+    { name: "Dashboard", path: "/dashboard", icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+      </svg>
+      
+      
+          )},
     { name: "All Users", path: "/users", icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
@@ -22,6 +50,7 @@ const Navber = () => {
 
     )},
 
+
   ];
   const list = [
     { name: 'Buy Cards', path: '/', icon: (
@@ -37,65 +66,118 @@ const Navber = () => {
     </svg>
     
     )},
-    { name: 'Get Cards', path: '/get-card', icon: (
+    { name: 'Get Credit', path: '/get-credit', icon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
     </svg>
     
     )},
   ];
-  const user = true
-    return (
-        <div>
-            <div className="navbar bg-[#34495E]">
-  <div className="navbar-start ">
-    
-    <div className="dropdown md:hidden">
-      <div tabIndex={0} role="button" className="btn btn-ghost text-white btn-circle">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M4 6h16M4 12h16M4 18h7" />
-        </svg>
-      </div>
-      <ul
-        tabIndex={0}
-        className="menu menu-sm dropdown-content bg-base-100 space-y-2 rounded-box z-[1] mt-3 w-52 p-2 shadow">
-       
-        {
-          user && (
-            adminsRoute.map((route)=>(
-              <Link to={route.path}
+
+
+  return (
+    <div className="bg-[#34495E]">
+  <nav className="navbar px-4 md:px-8">
+    {/* Mobile Dropdown */}
+    <div className="navbar-start md:hidden">
+      <div className="dropdown">
+        <button
+          tabIndex={0}
+          className="btn btn-ghost btn-circle text-white hover:bg-[#2c3e50]"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16M4 18h7"
+            />
+          </svg>
+        </button>
+        <ul
+          tabIndex={0}
+          className="menu menu-sm dropdown-content bg-white text-black space-y-2 rounded-box z-[1] mt-3 w-52 p-2 shadow-md"
+        >
+          {/* Admin Routes */}
+          {whoMe?.role === "admin" &&
+            adminsRoute.map((route) => (
+              <NavLink
+                to={route.path}
+                key={route.name}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3 py-2 rounded-lg ${
+                    isActive ? "bg-gray-100 text-[#34495E]" : "hover:bg-gray-200"
+                  }`
+                }
+              >
+                {route.icon}
+                {route.name}
+              </NavLink>
+            ))}
+
+          {/* General Routes */}
+          {list.map((route) => (
+            <NavLink
+              to={route.path}
               key={route.name}
-              ><div className="flex gap-2 justify-start items-center">{route.name}</div></Link>
-            ))
-          )
-        }
-        {
-          list.map((route)=>(
-            <Link to={route.path}
-            key={route.name}
-            ><div className="flex gap-2 justify-start items-center">{route.name}</div></Link>
-          ))
-        }
-      </ul>
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-2 rounded-lg ${
+                  isActive ? "bg-gray-100 text-[#34495E]" : "hover:bg-gray-200"
+                }`
+              }
+            >
+              {route.icon}
+              {route.name}
+            </NavLink>
+          ))}
+
+          {/* Logout Button */}
+{user &&        (  <button onClick={OnLogout} className="text-red-500 hover:underline">
+            Logout
+          </button>)}
+        </ul>
+      </div>
     </div>
-  </div>
-  
-  <div className="navbar-end gap-2 text-white ">
-<Link to='/login'>Login</Link>
-<Link to='/register'>Register</Link>
-  </div>
-</div>
+
+    {/* Logo */}
+    <div className="navbar-start md:navbar-center text-white text-lg font-bold">
+      <Link to="/">Sevastano</Link>
+    </div>
+
+    {/* Authentication Links */}
+    <div className="navbar-end flex items-center gap-4 text-white">
+      {user ? (
+        <div>
+          {whoMe && (
+            <p>
+              Credit: <span className="font-medium">${whoMe.balance.toFixed(2) || "0.00"}</span>
+            </p>
+          )}
         </div>
-    );
+      ) : (
+        <>
+          <Link to="/login" className="hover:underline">
+            Login
+          </Link>
+          <Link
+            to="/register"
+            className="bg-blue-500 px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            Register
+          </Link>
+        </>
+      )}
+    </div>
+  </nav>
+</div>
+
+  );
 };
 
 export default Navber;

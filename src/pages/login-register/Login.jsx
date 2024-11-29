@@ -19,9 +19,11 @@ const Login = () => {
           signIn(data.username,data.password)
           .then(() => {
               toast.success("Login successful");
+              
               navigate('/');
+              window.location.reload()
               reset(); 
-              console.log('login');
+              
               
           });
       } catch (error) {
@@ -40,7 +42,7 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Register</h2>
+        <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Username Input */}
@@ -87,7 +89,7 @@ const Login = () => {
           {/* Submit Button */}
           <div>
             <button type="submit" className="btn btn-primary w-full">
-              Register
+            Login
             </button>
           </div>
         </form>

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import useAxios from "../../hooks/useAxios";
 import toast from "react-hot-toast";
 
-const AddCard = () => {
+const UpdateCard = () => {
   const { register, handleSubmit, formState: { errors },reset } = useForm();
   const axiosCommon = useAxios();
   const { mutateAsync } = useMutation({
@@ -21,14 +21,11 @@ const AddCard = () => {
     },
   });
 
-  const onSubmit = (data) => {
+  const onSubmit = (data, actionType) => {
     const info = {
       ...data,
-      price:parseFloat(data.price),
       createdAt: Date.now(),
-      buyer:[],
-
-     
+      status: actionType === 'publish' ? 'Published' : 'Draft',
     };
     
     mutateAsync(info);
@@ -41,8 +38,9 @@ const AddCard = () => {
         onSubmit={handleSubmit((data) => onSubmit(data, 'publish'))} 
         className="space-y-6"
       >
-        <div>
-        <div className="grid grid-cols-1  gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Card Number */}
+          <div>
             <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700">Card Number</label>
             <input
               type="text"
@@ -51,19 +49,6 @@ const AddCard = () => {
               className={`input input-bordered w-full ${errors.cardNumber ? 'input-error' : ''}`}
             />
             {errors.cardNumber && <p className="text-sm text-red-500">{errors.cardNumber.message}</p>}
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Card Number */}
-          <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
-            <input
-              type="numer"
-              id="price"
-              {...register("price", { required: "price is required" })}
-              className={`input input-bordered w-full ${errors.price ? 'input-error' : ''}`}
-            />
-            {errors.price && <p className="text-sm text-red-500">{errors.price.message}</p>}
           </div>
 
           {/* Expiry Date */}
@@ -214,11 +199,17 @@ const AddCard = () => {
               className="input input-bordered w-full"
             />
           </div>
-    
         </div>
 
         {/* Buttons */}
         <div className="text-center mt-6 flex w-full gap-2 justify-end">
+          <button 
+            type="button" 
+            onClick={handleSubmit((data) => onSubmit(data, 'draft'))} 
+            className="btn btn-outline"
+          >
+            Save as Draft
+          </button>
           <button type="submit" className="btn btn-primary">Publish</button>
         </div>
       </form>
@@ -226,4 +217,4 @@ const AddCard = () => {
   );
 };
 
-export default AddCard;
+export default UpdateCard;
