@@ -11,7 +11,7 @@ const BuyCard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("All");
-
+const [load,setLoad]=useState(false)
   const limit = 10;
   const axiosCommon = useAxios();
   const { user, whoMe,myInfo } = useAuth();
@@ -40,14 +40,17 @@ const navigate = useNavigate()
     onSuccess: () => {
       toast.success("Card added successfully");
       myInfo(user?.email)
+      setLoad(false)
     
     },
     onError: () => {
       toast.error("Something went wrong.");
+      setLoad(false)
     },
   });
 
   const onBuy = (info) => {
+    setLoad(true)
     if (!user) {
       Swal.fire({
         title: "Login Required",
@@ -57,7 +60,7 @@ const navigate = useNavigate()
         cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-       
+        setLoad(false)
         navigate('/login')
       }
     });
@@ -71,6 +74,7 @@ const navigate = useNavigate()
         icon: "error",
         confirmButtonText: "Retry",
       });
+      setLoad(false)
       return;
     }
 
@@ -83,7 +87,7 @@ const navigate = useNavigate()
         cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-       
+        setLoad(false)
         navigate('/get-credit')
       }
     });
@@ -175,7 +179,7 @@ const navigate = useNavigate()
             <tr>
               <th>Card Type</th>
               <th>Card Number</th>
-              <th>Holder Name</th>
+            
               <th>Country</th>
               <th>Expiry Date</th>
               <th>Price</th>
@@ -186,13 +190,17 @@ const navigate = useNavigate()
             {data?.data.map((card) => (
               <tr key={card._id} className="bg-white hover:bg-gray-100">
                 <td>{card.cardType}</td>
-                <td>{card.cardNumber}</td>
-                <td>{card.holderName}</td>
+                <td>
+  {card.cardNumber.slice(0, 6)}
+</td>
+
+               
                 <td>{card.country}</td>
                 <td>{card.date}</td>
                 <td>{card.price}</td>
                 <td>
                   <button
+                  disabled={load}
                     onClick={() => onBuy(card)}
                     className="btn btn-primary btn-sm"
                   >

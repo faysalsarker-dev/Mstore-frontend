@@ -3,13 +3,14 @@ import { useForm } from 'react-hook-form';
 
 import useAuth from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 
 const Login = () => {
   const { register, handleSubmit, reset } = useForm();
   const [showPassword, setShowPassword] = useState(false);
-  const {signIn,user}=useAuth()
+  const {signIn,user,loading}=useAuth()
+
 
   const navigate = useNavigate();
   const location = useLocation()
@@ -40,7 +41,13 @@ const Login = () => {
 
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex relative items-center justify-center min-h-screen bg-gray-100">
+      <button onClick={()=>navigate('/')} className='absolute top-2 left-4 btn btn-ghost bg-white shadow-xl'>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+</svg>
+
+      </button>
       <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
 
@@ -84,12 +91,20 @@ const Login = () => {
           </div>
 
    
-       
+          <div className="flex flex-col items-center justify-center my-2">
+     
+     <p className="text-sm text-gray-600">
+     Don&apos;t have an account? 
+       <Link to="/register" className="text-blue-500 font-medium hover:underline">
+       Register
+       </Link>
+     </p>
+   </div>
 
           {/* Submit Button */}
           <div>
-            <button type="submit" className="btn btn-primary w-full">
-            Login
+            <button disabled={loading} type="submit" className="btn btn-primary w-full">
+           {loading?'Login...' :'Login'}
             </button>
           </div>
         </form>

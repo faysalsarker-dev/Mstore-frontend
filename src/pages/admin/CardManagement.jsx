@@ -121,7 +121,6 @@ const ManageCard = () => {
               <th>Card Number</th>
               <th>Holder Name</th>
               <th>Country</th>
-              <th>inStock</th>
               <th>Expiry Date</th>
               <th>Actions</th>
             </tr>
@@ -133,7 +132,7 @@ const ManageCard = () => {
                 <td>{card.cardNumber}</td>
                 <td>{card.holderName}</td>
                 <td>{card.country}</td>
-                <td>{card.inStock === true ? 'true':'false'}</td>
+      
                 <td>{card.date}</td>
                 <td>
                   <button

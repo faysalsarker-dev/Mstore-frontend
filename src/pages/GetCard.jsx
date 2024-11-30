@@ -5,14 +5,17 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import useAuth from "../hooks/useAuth";
 import PropTypes from "prop-types";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
 const GetCard = () => {
   const [id, setId] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("");
+  const [loading,setLoading]=useState(false)
   const axiosCommon = useAxios();
   const { user } = useAuth();
-
+const navigate = useNavigate()
   // Fetch Dashboard Data
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dashboard"],
@@ -37,7 +40,7 @@ const GetCard = () => {
       return data;
     },
   });
-console.log(requestInfo);
+
   // Mutation for Adding Request
   const addAccount = useMutation({
     mutationFn: async (info) => axiosCommon.post("/add-request", info),
@@ -47,14 +50,45 @@ console.log(requestInfo);
       setType("");
       setAmount("");
       refetch();
+      setLoading(false)
     },
-    onError: () => toast.error("Failed to add request."),
+    onError: () => {
+      toast.error("Failed to add request.")
+      setLoading(false)
+    },
   });
 
   const addRequest = () => {
+    setLoading(true)
+
+    if (!user) {
+      Swal.fire({
+        title: "Login Required",
+        text: "You need to log in to make a request.",
+        icon: "warning",
+        confirmButtonText: "Login",
+        cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+       
+        navigate('/login')
+      }
+    });
+    return;
+  }
+
+
+
+
+
     if (!id || !amount || !type) {
+      setLoading(false)
       return toast.error("Please fill in all fields.");
     }
+
+
+
+
 
     const info = {
       id,
@@ -65,7 +99,7 @@ console.log(requestInfo);
       date: Date.now(),
       status: "pending",
     };
-console.log(info);
+
     addAccount.mutate(info);
   };
 
@@ -138,7 +172,7 @@ console.log(info);
               onChange={(e) => setType(e.target.value)}
               value={type}
               type="text"
-              placeholder="Enter transaction type"
+              placeholder="Enter Address name"
               className="input input-bordered w-full"
             />
           </div>
@@ -170,11 +204,11 @@ console.log(info);
           </div>
         </div>
         <button
-        disabled={!user}
+        disabled={loading}
           onClick={addRequest}
           className="btn bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors duration-300 w-full sm:w-auto"
         >
-         Make request
+         {!loading ? 'Make request' :'Making request...'}
         </button>
       </div>
 

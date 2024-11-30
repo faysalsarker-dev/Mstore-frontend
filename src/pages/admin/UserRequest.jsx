@@ -9,7 +9,8 @@ const UserRequest = () => {
   const axiosCommon = useAxios();
   const [modalInfo, setModalInfo] = useState(null); // To manage modal state
   const [amount, setAmount] = useState("");
-  const {user}=useAuth()
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   // Fetch Request Info
   const { data: requestInfo, refetch } = useQuery({
@@ -27,12 +28,15 @@ const UserRequest = () => {
     onSuccess: () => {
       toast.success("Request updated successfully.");
       refetch();
-      setAmount('')
+      setAmount("");
       setModalInfo(null); // Close modal
+      setLoading(false);
     },
     onError: () => {
-        setAmount('')
-        toast.error("Failed to update the request.")},
+      setAmount("");
+      toast.error("Failed to update the request.");
+      setLoading(false);
+    },
   });
 
   // Mutation for Deleting a Request
@@ -41,17 +45,23 @@ const UserRequest = () => {
     onSuccess: () => {
       toast.success("Request deleted successfully.");
       refetch();
+      setLoading(false);
     },
-    onError: () => toast.error("Failed to delete the request."),
+    onError: () => {
+      setLoading(false);
+      toast.error("Failed to delete the request.");
+    },
   });
 
   // Update Confirmation Handler
   const onUpdate = () => {
+    setLoading(true);
     if (!amount || isNaN(amount) || Number(amount) <= 0) {
       toast.error("Please enter a valid amount.");
+      setLoading(false);
       return;
     }
-    const updatedInfo = { ...modalInfo, amount, author:user?.email };
+    const updatedInfo = { ...modalInfo, amount, author: user?.email };
     updateRQ.mutate(updatedInfo);
   };
 
@@ -82,7 +92,7 @@ const UserRequest = () => {
               <th className="px-4 py-2 text-left">Amount</th>
               <th className="px-4 py-2 text-left">Type</th>
               <th className="px-4 py-2 text-left">Status</th>
-              <th className="px-4 py-2 text-left">username</th>
+              <th className="px-4 py-2 text-left">Username</th>
               <th className="px-4 py-2 text-left">Date</th>
               <th className="px-4 py-2 text-left">Actions</th>
             </tr>
@@ -113,19 +123,19 @@ const UserRequest = () => {
                     {info.status}
                   </div>
                 </td>
-                <td className="px-4 py-3">
-               {info.username}
-                </td>
+                <td className="px-4 py-3">{info.username}</td>
                 <td className="px-4 py-3 text-gray-600">
                   {new Date(info.date).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3 flex gap-2">
-                  <button
-                    onClick={() => setModalInfo(info)}
-                    className="btn btn-xs bg-primary text-white rounded-md"
-                  >
-                    Activate
-                  </button>
+                  {info.status !== "active" && (
+                    <button
+                      onClick={() => setModalInfo(info)}
+                      className="btn btn-xs bg-primary text-white rounded-md"
+                    >
+                      Activate
+                    </button>
+                  )}
                   <button
                     onClick={() => onDelete(info._id)}
                     className="btn btn-xs bg-red-600 hover:bg-red-700 text-white rounded-md"
@@ -149,15 +159,13 @@ const UserRequest = () => {
           <div className="modal-box">
             <h3 className="font-bold text-lg">Activate Request</h3>
             <p className="text-gray-700 mb-4">
-              Updating request for Transaction Code:{" "}
-              <strong>{modalInfo.id}</strong>
-            <br />
-            
-              <strong>Ammount {modalInfo.amount}</strong>
+              Updating request for Transaction Code: <strong>{modalInfo.id}</strong>
+              <br />
+              <strong>Amount: {modalInfo?.amount}</strong>
             </p>
             <input
               type="number"
-              defaultValue={modalInfo.amount}
+              defaultValue={modalInfo?.amount}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Enter amount"
@@ -166,9 +174,14 @@ const UserRequest = () => {
             <div className="modal-action">
               <button
                 onClick={onUpdate}
-                className="btn btn-sm bg-green-500 text-white rounded-md"
+                disabled={loading}
+                className={`btn btn-sm rounded-md ${
+                  loading
+                    ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                    : "bg-green-500 text-white"
+                }`}
               >
-                Submit
+                {loading ? "Submitting..." : "Submit"}
               </button>
               <button
                 onClick={() => setModalInfo(null)}

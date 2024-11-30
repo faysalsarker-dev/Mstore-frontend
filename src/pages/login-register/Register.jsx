@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import useAxios from '../../hooks/useAxios';
 import useAuth from '../../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();
@@ -13,7 +13,7 @@ const Register = () => {
   const navigate = useNavigate();
 
   const axiosCommon = useAxios();
-  const { createUser } = useAuth();
+  const { createUser,loading } = useAuth();
 
   const username = watch('username');
   const password = watch('password');
@@ -76,7 +76,13 @@ const Register = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex relative items-center justify-center min-h-screen bg-gray-100">
+           <button onClick={()=>navigate('/')} className='absolute top-2 left-4 btn btn-ghost bg-white shadow-xl'>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+</svg>
+
+      </button>
       <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold text-center mb-6">Register</h2>
 
@@ -141,7 +147,7 @@ const Register = () => {
               type="button"
               onClick={generateCredentials}
               className="btn btn-outline btn-primary"
-              disabled={loadingGenerate}
+              disabled={loadingGenerate || loading}
             >
               {loadingGenerate ? 'Generating...' : 'Generate Username & Password'}
             </button>
@@ -155,12 +161,20 @@ const Register = () => {
               Copy
             </button>
           </div>
-
+          <div className="flex flex-col items-center justify-center my-2">
+     
+      <p className="text-sm text-gray-600">
+        Already have an account?
+        <Link to="/login" className="text-blue-500 font-medium hover:underline">
+           Login
+        </Link>
+      </p>
+    </div>
           <div className="mt-4">
             <button
               type="submit"
               className="btn btn-primary w-full"
-              disabled={loadingRegister}
+              disabled={loadingRegister || loading || loadingGenerate}
             >
               {loadingRegister ? 'Registering...' : 'Register'}
             </button>

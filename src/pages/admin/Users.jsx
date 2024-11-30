@@ -156,7 +156,7 @@ const {deleteUser}=useAuth()
                       user.status === "active" ? "badge-success" : "badge-error"
                     }`}
                   >
-                    {user.status === "active" ? "Active" : "Deactive"}
+                    {user.status === "active" ? "Active" : "Inactive"}
                   </span>
                 </td>
                 <td>
