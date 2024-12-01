@@ -147,7 +147,7 @@ const OnLogout =()=>{
 
     {/* Logo */}
     <div className="navbar-start md:navbar-center text-white text-lg font-bold">
-      <Link to="/">Sevastano</Link>
+      <Link to="/">Sevastan0</Link>
     </div>
 
     {/* Authentication Links */}
